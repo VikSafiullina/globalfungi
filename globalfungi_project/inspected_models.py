@@ -77,20 +77,6 @@ class AuthUserUserPermissions(models.Model):
         unique_together = (('user', 'permission'),)
 
 
-class DjangoAdminLog(models.Model):
-    action_time = models.DateTimeField()
-    object_id = models.TextField(blank=True, null=True)
-    object_repr = models.CharField(max_length=200)
-    action_flag = models.PositiveSmallIntegerField()
-    change_message = models.TextField()
-    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING, blank=True, null=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
-
-    class Meta:
-        managed = False
-        db_table = 'django_admin_log'
-
-
 class DjangoContentType(models.Model):
     app_label = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
@@ -112,16 +98,6 @@ class DjangoMigrations(models.Model):
         db_table = 'django_migrations'
 
 
-class DjangoSession(models.Model):
-    session_key = models.CharField(primary_key=True, max_length=40)
-    session_data = models.TextField()
-    expire_date = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'django_session'
-
-
 class Genus(models.Model):
     genus = models.CharField(max_length=32)
     samples = models.TextField()
@@ -131,15 +107,6 @@ class Genus(models.Model):
     class Meta:
         managed = False
         db_table = 'genus'
-
-
-class GlobalfungiAbundance(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    value = models.IntegerField()
-
-    class Meta:
-        managed = False
-        db_table = 'globalfungi_abundance'
 
 
 class GlobalfungiChemicaldata(models.Model):
@@ -260,7 +227,7 @@ class Metadata(models.Model):
 
 
 class Samples(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.IntegerField()
     add_date = models.CharField(max_length=10)
     paper_id = models.CharField(max_length=32)
     title = models.TextField()

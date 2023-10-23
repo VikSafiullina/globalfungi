@@ -19,8 +19,10 @@ def migrate_sh_table(db_config, original_table_name, result_table_name):
     create_table_query = f"""
     CREATE TABLE IF NOT EXISTS {result_table_name} (
         id VARCHAR(36) PRIMARY KEY,
-        sh_name VARCHAR(255),
         sample_id INT,
+        sh_name VARCHAR(255),
+        species_name VARCHAR(255),
+        genus_name VARCHAR(255),
         abundance INT,
         variants INT
     );

@@ -253,19 +253,13 @@ class Sample(models.Model):
     id = models.UUIDField()
     created_at = models.DateTimeField(default=time.Now())
     paper_id = models.ForeignKey(Paper)
-    species_hypothesis = models.ManyToManyField(TaxonomyData, related_name='SH')
+    sh = models.CharField() # taxonomy is retrieved via PlutoF API, both taxa and sh
 
     # samplename interni - as a display name
     sample_type = models.CharField(
         choices=SampleTypeEnum.choices
     )
-    biome = models.CharField(
-        choices=BiomeEnum.choices,
-        default=None
-    )
-    biome_detailed = models.CharField(
-        choices=BiomeDetailedEnum.choices,
-    )
+    biome = models.CharField() # to be validated via ENVO api to be present on any level
 
 
 
@@ -340,17 +334,6 @@ class SequencingData(models.Model):
     its2_extracted = models.IntegerField(null=False)
 
 
-
-class TaxonomyData(models.Model):
-    sh = models.CharField()
-    species = models.CharField()
-    genus = models.CharField()
-    family = models.CharField()
-    order = models.CharField()
-    _class = models.CharField()
-    phylum = models.CharField()
-    kingdom = models.CharField()
-    ecology = models.CharField(null=True)
 
 
 class SampleDescription(models.Model):

@@ -145,3 +145,5 @@ LOGIN_URL = '/login/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+HANDLER_404 = 'globalfungi.views.handler_404'
+HANDLER_500 = 'globalfungi.views.handler_500'

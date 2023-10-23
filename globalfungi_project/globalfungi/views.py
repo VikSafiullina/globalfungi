@@ -66,10 +66,6 @@ def contact(request):
     return render(request, 'contact.html', {'form': form})
 
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-
-
 def home(request):
     return render(request, 'home.html')
 
@@ -79,4 +75,10 @@ def faq(request):
 
 
 def handler_404(request, exception):
-    return render(request, '404.html', {})
+
+
+
+
+
+
+

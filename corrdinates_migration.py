@@ -1,7 +1,7 @@
 import mysql.connector
 import uuid
 
-def migrate_sh_table(db_config, original_table_name, result_table_name):
+def migrate_coord(db_config, original_table_name, result_table_name):
     # Establish the connection
     mydb = mysql.connector.connect(
       host=db_config['host'],
@@ -19,10 +19,9 @@ def migrate_sh_table(db_config, original_table_name, result_table_name):
     create_table_query = f"""
     CREATE TABLE IF NOT EXISTS {result_table_name} (
         id VARCHAR(36) PRIMARY KEY,
-        sh_name VARCHAR(255),
-        sample_id INT,
-        abundance INT,
-        variants INT
+        sample_id INT(11),
+        FOREIGN KEY (sample_id) REFERENCES samples(id),
+        geometry POINT NOT NULL
     );
     """
     mycursor.execute(create_table_query)
@@ -35,18 +34,19 @@ def migrate_sh_table(db_config, original_table_name, result_table_name):
 
     # Migrate data to the result table
     for row in original_table_data:
-        sh_name = row[0]
-        samples = row[1].split(';')
-        abundances = list(map(int, row[2].split(';')))
-        variants = row[3]
-        print(f'Processing row with sh_name: {sh_name}')
+        sample_id = row[0]
+        latitude = row[13]
+        longitude = row[14]
+        print(f'Processing row with sample id: {sample_id}')
 
-        for sample, abundance in zip(samples, abundances):
-            id = str(uuid.uuid4())  # Using uuid4 to generate a unique id
-            insert_query = f"INSERT INTO {result_table_name} (id, sh_name, sample_id, abundance, variants) VALUES (%s, %s, %s, %s, %s)"
-            values = (id, sh_name, sample, abundance, variants)
-            mycursor.execute(insert_query, values)
-            print(f'Inserted data for sample: {sh_name}, {sample}, abundance: {abundance}, variants : {variants}')
+        id = str(uuid.uuid4())  # Using uuid4 to generate a unique id
+        geometry = f'POINT({latitude} {longitude})'
+    
+        insert_query = f"INSERT INTO {result_table_name} (id, sample_id, geometry) VALUES (%s, %s, GeomFromText(%s))"
+        values = (id, sample_id, geometry)
+        mycursor.execute(insert_query, values)
+
+        print(f'Inserted data for sample: {sample_id}, {geometry}')
 
     # Commit the changes
     mydb.commit()
@@ -59,4 +59,4 @@ def migrate_sh_table(db_config, original_table_name, result_table_name):
 
 # Example db_config
 db_config = {'host': 'localhost', 'user': 'root', 'password': '220199', 'database': 'globalfungitest'}
-migrate_sh_table(db_config,'sh', 'sh_migrated')
+migrate_coord(db_config,'samples', 'sample_coords')
