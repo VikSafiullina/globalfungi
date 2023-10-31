@@ -278,7 +278,7 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
             # Insert data into the Sample table
             print("entering sampledata")
             #TODO: remove original_id
-            sample_insert_query = "INSERT INTO Samples_migrated (id, original_id, add_date, paper_id, chemical_data_id, env_data_id, sampling_data_id, sequencing_data_id, sample_info) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            sample_insert_query = "INSERT INTO Samples_migrated (id, original_id, add_date, paper_id, chemical_data_id, env_dsamples_table_migration.pyata_id, sampling_data_id, sequencing_data_id, sample_info) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
             add_date_to_date = convert_to_mysql_date(row[1])
             sample_values = (sample_id, row[0], add_date_to_date, paper_id, chem_id, env_id, samp_id, seq_id, row[50])
 
