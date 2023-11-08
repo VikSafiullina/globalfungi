@@ -203,14 +203,14 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
             env_data_id VARCHAR(36),
             sampling_data_id VARCHAR(36),
             sequencing_data_id VARCHAR(36),
-            coords_id VARCHAR(36),
+            latitude FLOAT,
+            longitude FLOAT,
             sample_info TEXT,
             FOREIGN KEY (paper_id) REFERENCES Paper(id) ON DELETE SET NULL,
             FOREIGN KEY (chemical_data_id) REFERENCES ChemicalData(id) ON DELETE SET NULL,
             FOREIGN KEY (env_data_id) REFERENCES EnvData(id) ON DELETE SET NULL,
             FOREIGN KEY (sampling_data_id) REFERENCES SamplingData(id) ON DELETE SET NULL,
-            FOREIGN KEY (sequencing_data_id) REFERENCES SequencingData(id) ON DELETE SET NULL,
-            FOREIGN KEY (coords_id) REFERENCES sample_coords(id) ON DELETE SET NULL
+            FOREIGN KEY (sequencing_data_id) REFERENCES SequencingData(id) ON DELETE SET NULL
         );
         """
 
@@ -278,9 +278,9 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
             # Insert data into the Sample table
             print("entering sampledata")
             #TODO: remove original_id
-            sample_insert_query = "INSERT INTO Samples_migrated (id, original_id, add_date, paper_id, chemical_data_id, env_dsamples_table_migration.pyata_id, sampling_data_id, sequencing_data_id, sample_info) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            sample_insert_query = "INSERT INTO Samples_migrated (id, original_id, add_date, paper_id, chemical_data_id, env_data_id, sampling_data_id, sequencing_data_id, latitude, longitude, sample_info) VALUES (%s, %s, %s, %s, %s, %s, %s,%s, %s,%s, %s)"
             add_date_to_date = convert_to_mysql_date(row[1])
-            sample_values = (sample_id, row[0], add_date_to_date, paper_id, chem_id, env_id, samp_id, seq_id, row[50])
+            sample_values = (sample_id, row[0], add_date_to_date, paper_id, chem_id, env_id, samp_id, seq_id, row[13], row[14], row[50])
 
             # Execute the queries
 
@@ -332,7 +332,7 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
                 paper_values = (paper_id, *current_paper)  # Update the tuple with the new id
                 mycursor.execute(paper_insert_query, paper_values)
 
-            sample_values = (sample_id, row[0], add_date_to_date, paper_id, chem_id, env_id, samp_id, seq_id, row[50])
+            sample_values = (sample_id, row[0], add_date_to_date, paper_id, chem_id, env_id, samp_id, seq_id, row[13], row[14], row[50])
             if not all(x is None for x in sample_values[1:]):  # Exclude the id from the check
                 mycursor.execute(sample_insert_query, sample_values)
 
