@@ -2,33 +2,25 @@ version: '3.8'
 
 services:
   db:
-    image: mariadb:latest
+    build: 
+      context: .
+      dockerfile: Dockerfile
     environment:
-      MARIADB_ROOT_PASSWORD: mypassword  # Corrected environment variable
+      MARIADB_ROOT_PASSWORD: 220199
+      MARIADB_ROOT_USER: root
+      MARIADB_DATABASE: globalfungitest
     ports:
-      - "33060:33060"  # Corrected port mapping
+      - "33060:33060"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=mypassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=220199"]
       interval: 30s
       timeout: 10s
       retries: 3
     volumes:
-      - type: tmpfs
-        target: /tmp
-      # Uncommented schema volume
-      #- ./db/entrypoint.sql:/docker-entrypoint-initdb.d/00-schema.sql
-
-  pgadmin:
-    image: phpmyadmin:latest
-    environment:
-      PMA_HOST: db  # Specify the database host
-      PMA_USER: root  # Specify the database user
-      PMA_PASSWORD: mypassword  # Specify the database password
-    ports:
-      - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - type: tmpfs
-        target: /tmp
+        - db_data:/var/lib/mysql
+        - ./db/legacy_database_dump.sql:/docker-entrypoint-initdb.d/legacy_database_dump.sql
+        - ./initial_migrations:/usr/src/app/scripts
+    tmpfs:
+        - /tmp
+volumes:
+  db_data:
