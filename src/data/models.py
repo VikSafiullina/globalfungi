@@ -23,7 +23,6 @@ class Sample(Base):
     __tablename__ = 'Samples_migrated' #TODO: change to table name to "samples" when switching to production
     id = Column(UUID(as_uuid=True), primary_key=True)
     original_id = Column(Integer)
-    add_date = Column(Date)
     paper_id = Column(UUID(as_uuid=True), ForeignKey('Paper.id')) #TODO: check if this is correct
     chemical_data_id = Column(UUID(as_uuid=True), ForeignKey('ChemicalData.id', ondelete='CASCADE'))
     env_data_id = Column(UUID(as_uuid=True), ForeignKey('EnvData.id', ondelete='CASCADE'))
@@ -32,6 +31,9 @@ class Sample(Base):
     latitude = Column(Float)
     longitude = Column(Float)
     sample_info = Column(Text)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    deleted_at = Column(DateTime, nullable=True)
 
     # Setup relationships with cascade delete
     chemical_data = relationship("ChemicalData", back_populates="sample", cascade="all, delete-orphan")
@@ -40,14 +42,14 @@ class Sample(Base):
     sequencing_data = relationship("SequencingData", back_populates="sample", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Sample(id='{self.id}', original_id='{self.original_id}', add_date='{self.add_date}', " \
+        return f"<Sample(id='{self.id}', original_id='{self.original_id}', add_date='{self.created_at}', " \
                f"paper_id='{self.paper_id}', chemical_data_id='{self.chemical_data_id}', " \
                f"env_data_id='{self.env_data_id}', sampling_data_id='{self.sampling_data_id}', " \
                f"sequencing_data_id='{self.sequencing_data_id}', latitude={self.latitude}, " \
                f"longitude={self.longitude}, sample_info='{self.sample_info}')>"
 
     def __str__(self):
-        return f"Sample ID: {self.id}, Original ID: {self.original_id}, Added on: {self.add_date}, " \
+        return f"Sample ID: {self.id}, Original ID: {self.original_id}, Added on: {self.created_at}, " \
                f"Paper ID: {self.paper_id}, Chemical Data ID: {self.chemical_data_id}, " \
                f"Environmental Data ID: {self.env_data_id}, Sampling Data ID: {self.sampling_data_id}, " \
                f"Sequencing Data ID: {self.sequencing_data_id}, Latitude: {self.latitude}, " \
@@ -56,7 +58,7 @@ class Sample(Base):
         return {
             'id': self.id,
             'original_id': self.original_id,
-            'add_date': self.add_date.isoformat() if self.add_date else None,
+            'add_date': self.created_at.isoformat() if self.created_at else None,
             'paper_id': self.paper_id,
             'chemical_data_id': self.chemical_data_id,
             'env_data_id': self.env_data_id,
@@ -92,7 +94,7 @@ class Sample(Base):
 
 class Paper(Base):
     __tablename__ = 'Paper'
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     internal_id = Column(String(36))
     title = Column(Text)
     authors = Column(Text)
@@ -178,7 +180,7 @@ class Paper(Base):
 
 class ChemicalData(Base):
     __tablename__ = 'ChemicalData'
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     total_c_content = Column(Float)
     total_n_content = Column(Float)
     organic_matter_content = Column(Float)
@@ -244,7 +246,7 @@ class ChemicalData(Base):
 
 class EnvData(Base):
     __tablename__ = 'EnvData'
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     biome = Column(String(32))
     biome_detail = Column(Text)
     plants_dominant = Column(Text)
@@ -293,7 +295,7 @@ class EnvData(Base):
 
 class SamplingData(Base):
     __tablename__ = 'SamplingData'
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     sample_name = Column(String(36))
     sample_type = Column(String(32))
     manipulated = Column(Boolean) # tinyint(1) in MariaDB can be represented as a Boolean in Python
@@ -355,7 +357,7 @@ class SamplingData(Base):
 class SequencingData(Base):
     __tablename__ = 'SequencingData'
     
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     sequencing_platform = Column(String(32))
     target_gene = Column(String(32))
     primers = Column(Text)
@@ -488,7 +490,7 @@ class MailList(Base):
 class Taxonomy(Base):
     __tablename__ = 'taxonomy_migrated' #TODO: change to table name to "taxonomy" when switching to production
     
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     sh = Column(String(32), nullable=False)
     kingdom = Column(String(64), nullable=False)
     phylum = Column(String(64), nullable=False)
@@ -561,9 +563,9 @@ class Taxonomy(Base):
 class SH(Base):
     __tablename__ = 'sh_migrated' #TODO: change to table name to "sh" when switching to production
     
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     sh_name = Column(String(255), nullable=True)
-    sample_id = Column(UUID, nullable=True)
+    sample_id = Column(UUID(as_uuid=True), nullable=True)
     abundance = Column(Integer, nullable=True)
     variants = Column(Integer, nullable=True)
 
@@ -584,7 +586,7 @@ class SH(Base):
 
 class Variant(Base):
     __tablename__ = 'variants_migrated' #TODO: change to table name to "variants" when switching to production
-    id = Column(UUID, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
     sequence = Column(Text, nullable=False)
     sample_id = Column(String(255), ForeignKey('Samples_migrated.id', ondelete='CASCADE'))
     abundance = Column(Integer, nullable=False)
@@ -692,3 +694,23 @@ class Database:
             logger.error(f"An error occurred: {e}")
         finally:
             session.close()
+
+class Author(Base):
+    __tablename__ = 'authors'
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    name = Column(String(255), nullable=False)
+    paper_id = Column(UUID(as_uuid=True), ForeignKey('Paper.id', ondelete='IGNORE'))
+
+
+    def __repr__(self):
+        return f"<Author(id='{self.id}', name='{self.name}', paper_id='{self.paper_id}')>"
+    
+    def to_dict(self):
+        return {
+            'id': str(self.id),  # Convert UUID to string
+            'name': self.name,
+            'paper_id': str(self.paper_id)  # Convert UUID to string
+        }
+    
+    def to_json(self):
+        return json.dumps(self.to_dict(), default=str)
