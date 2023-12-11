@@ -1,0 +1,6 @@
+flask
+pydantic
+validate_email
+sqlalchemy
+pymysql
+mysql-connector-python

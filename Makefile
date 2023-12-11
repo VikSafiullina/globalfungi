@@ -16,3 +16,7 @@ db-reset:
 
 config:
 	cp common/config.example.py common/config.py
+
+update-requirements:
+	pip-compile --upgrade --output-file requirements.txt requirements.in
+	pip3 install -r requirements.txt

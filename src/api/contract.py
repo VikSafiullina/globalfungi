@@ -434,7 +434,7 @@ class ChemicalData:
             self.session_manager.close_session()
 
 
-    def ListChemicalData(self, page, order, limit, filters):
+    def ListChemicalData(self, page, order, limit):
         session = self.session_manager.get_session()
         try:
             # Determine sort order
@@ -547,8 +547,21 @@ class EnvData:
 
 
     def ListEnvData(self, page, limit, sort):
-        pass
+        session = self.session_manager.get_session()
+        try:
+            # Determine sort order
+            sort_column, sort_order = sort.split(',')
+            order_by = asc(sort_column) if sort_order.lower() == 'asc' else desc(sort_column)
 
+            # Query with pagination and sorting
+            env_data_query = session.query(EnvDataModel).order_by(order_by)
+            env_data_paginated = env_data_query.offset((page - 1) * limit).limit(limit).all()
+
+            if env_data_paginated:
+                return [env_data.to_dict() for env_data in env_data_paginated]
+            else:
+                return {"status": "error", "message": "No env_data found."}
+        
     def CreateEnvData(self, env_data):
         pass
 

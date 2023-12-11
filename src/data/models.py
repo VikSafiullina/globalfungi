@@ -181,6 +181,7 @@ class Paper(Base):
 class ChemicalData(Base):
     __tablename__ = 'ChemicalData'
     id = Column(UUID(as_uuid=True), primary_key=True)
+    sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
     total_c_content = Column(Float)
     total_n_content = Column(Float)
     organic_matter_content = Column(Float)
@@ -189,6 +190,8 @@ class ChemicalData(Base):
     total_ca = Column(Float)
     total_p = Column(Float)
     total_k = Column(Float)
+
+    sample = relationship("Sample", back_populates="chemical_data")
 
     def __repr__(self):
         return f"<ChemicalData(id='{self.id}')>"
@@ -296,6 +299,8 @@ class EnvData(Base):
 class SamplingData(Base):
     __tablename__ = 'SamplingData'
     id = Column(UUID(as_uuid=True), primary_key=True)
+    sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
+    sample = relationship("Sample", back_populates="chemical_data")
     sample_name = Column(String(36))
     sample_type = Column(String(32))
     manipulated = Column(Boolean) # tinyint(1) in MariaDB can be represented as a Boolean in Python
@@ -358,6 +363,8 @@ class SequencingData(Base):
     __tablename__ = 'SequencingData'
     
     id = Column(UUID(as_uuid=True), primary_key=True)
+    sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
+    sample = relationship("Sample", back_populates="chemical_data")
     sequencing_platform = Column(String(32))
     target_gene = Column(String(32))
     primers = Column(Text)
@@ -588,7 +595,8 @@ class Variant(Base):
     __tablename__ = 'variants_migrated' #TODO: change to table name to "variants" when switching to production
     id = Column(UUID(as_uuid=True), primary_key=True)
     sequence = Column(Text, nullable=False)
-    sample_id = Column(String(255), ForeignKey('Samples_migrated.id', ondelete='CASCADE'))
+    sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
+    sample = relationship("Sample", back_populates="chemical_data")
     abundance = Column(Integer, nullable=False)
     marker = Column(String(255), nullable=False)
     sh = Column(String(255), nullable=False)
