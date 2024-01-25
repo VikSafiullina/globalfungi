@@ -18,7 +18,7 @@ def migrate_coord(db_config, original_table_name, result_table_name):
     # Create the result table if it doesn't exist
     create_table_query = f"""
     CREATE TABLE IF NOT EXISTS {result_table_name} (
-        id VARCHAR(36) PRIMARY KEY,
+        id UUID PRIMARY KEY,
         sample_id INT(11),
         FOREIGN KEY (sample_id) REFERENCES samples(id),
         geometry POINT NOT NULL

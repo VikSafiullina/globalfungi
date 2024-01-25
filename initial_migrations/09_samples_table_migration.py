@@ -137,7 +137,7 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
         # Create the result table if it doesn't exist
         create_table_query = f"""
         CREATE TABLE ChemicalData (
-            id VARCHAR(36)  PRIMARY KEY,
+            id UUID  PRIMARY KEY,
             total_c_content FLOAT,
             total_n_content FLOAT,
             organic_matter_content FLOAT,
@@ -148,14 +148,14 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
             total_k FLOAT
         );
         CREATE TABLE EnvData (
-            id VARCHAR(36)  PRIMARY KEY,
+            id UUID  PRIMARY KEY,
             biome VARCHAR(32),
             biome_detail TEXT,
             plants_dominant TEXT,
             plants_all TEXT
         );
         CREATE TABLE SamplingData (
-            id VARCHAR(36)  PRIMARY KEY,
+            id UUID  PRIMARY KEY,
             sample_name TEXT,
             sample_type VARCHAR(32),
             manipulated BOOLEAN,
@@ -174,7 +174,7 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
             sample_barcode TEXT
         );
         CREATE TABLE SequencingData (
-            id VARCHAR(36)  PRIMARY KEY,
+            id UUID  PRIMARY KEY,
             sequencing_platform VARCHAR(32),
             target_gene VARCHAR(32),
             primers TEXT,
@@ -184,7 +184,7 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
             extraction_dna_method TEXT
         );
         CREATE TABLE Paper (
-            id VARCHAR(36)  PRIMARY KEY,
+            id UUID  PRIMARY KEY,
             internal_id TEXT,
             title TEXT,
             authors TEXT,
@@ -195,7 +195,7 @@ def migrate_samples_table(db_config, original_table_name, result_table_name_list
             area_gps INT
             );
         CREATE TABLE Samples_migrated (
-            id VARCHAR(36) PRIMARY KEY,
+            id UUID PRIMARY KEY,
             original_id VARCHAR(36),
             add_date DATE,
             paper_id VARCHAR(36),

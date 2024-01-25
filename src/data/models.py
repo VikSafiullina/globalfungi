@@ -601,9 +601,9 @@ class Variant(Base):
     __tablename__ = 'variants_migrated' #TODO: change to table name to "variants" when switching to production
     id = Column(UUID(as_uuid=True), primary_key=True)
     sequence = Column(Text, nullable=False)
-    abundance = Column(Integer, nullable=False)
+    abundance = Column(Integer, nullable=False) # most popular = 1, assume NULL on db level
     marker = Column(String(255), nullable=False)
-    sh = Column(String(255), nullable=False)
+    sh = Column(String(255), nullable=False) 
 
 
 class Database:

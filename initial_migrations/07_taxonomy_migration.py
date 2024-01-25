@@ -22,7 +22,7 @@ def migrate_samples_to_sh_table(db_config, original_table_name, result_table_nam
         # Create the result table if it doesn't exist
         create_table_query = f"""
             CREATE TABLE IF NOT EXISTS {result_table_name} (
-                id varchar(36) PRIMARY KEY, 
+                id UUID PRIMARY KEY, 
                 sh varchar(32) NOT NULL,
                 kingdom varchar(64) NOT NULL,
                 phylum varchar(64) NOT NULL,

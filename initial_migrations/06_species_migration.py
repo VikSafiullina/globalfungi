@@ -19,7 +19,7 @@ def migrate_species_table(db_config, original_table_name, result_table_name):
 
         create_table_query = f"""
         CREATE TABLE IF NOT EXISTS {result_table_name} (
-            id VARCHAR(36) PRIMARY KEY,
+            id UUID PRIMARY KEY,
             species_name VARCHAR(64),
             sample_id INT,
             abundance INT,

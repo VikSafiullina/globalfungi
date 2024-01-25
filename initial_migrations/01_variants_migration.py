@@ -105,12 +105,12 @@ def migrate_variants_table(db_config, original_table_name, result_table_name):
         # Create the result table if it doesn't exist
         create_table_query = f"""
         CREATE TABLE IF NOT EXISTS {result_table_name} (
-            id VARCHAR(36) PRIMARY KEY,
+            id UUID PRIMARY KEY,
             encoded_sequence BLOB,  -- Use BLOB to store binary data
             sample_id INT,
             abundance INT,
-            marker VARCHAR(128),  -- Convert marker to integer
-            sh VARCHAR(255)
+            marker VARCHAR(128),
+            sh INT DEFAULT NULL,
         );
         """
         mycursor.execute(create_table_query)
@@ -132,7 +132,7 @@ def migrate_variants_table(db_config, original_table_name, result_table_name):
                 
                 marker = row[3]
                 samples = row[1].split(';')
-                sh = row[4]
+                sh = row[4] if row[4] != '0' else None
                 abundances = list(map(int, row[2].split(';')))
 
                 for sample, abundance in zip(samples, abundances):
