@@ -20,14 +20,16 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 class Sample(Base):
-    __tablename__ = 'Samples_migrated' #TODO: change to table name to "samples" when switching to production
+    __tablename__ = 'Samples_migrated'
     id = Column(UUID(as_uuid=True), primary_key=True)
     original_id = Column(Integer)
-    paper_id = Column(UUID(as_uuid=True), ForeignKey('Paper.id')) #TODO: check if this is correct
-    chemical_data_id = Column(UUID(as_uuid=True), ForeignKey('ChemicalData.id', ondelete='CASCADE'))
-    env_data_id = Column(UUID(as_uuid=True), ForeignKey('EnvData.id', ondelete='CASCADE'))
-    sampling_data_id = Column(UUID(as_uuid=True), ForeignKey('SamplingData.id', ondelete='CASCADE'))
-    sequencing_data_id = Column(UUID(as_uuid=True), ForeignKey('SequencingData.id', ondelete='CASCADE'))
+    paper_id = Column(UUID(as_uuid=True), ForeignKey('Paper.id'))
+
+    chemical_data_id = Column(UUID(as_uuid=True), ForeignKey('ChemicalData.id'))
+    env_data_id = Column(UUID(as_uuid=True), ForeignKey('EnvData.id'))
+    sampling_data_id = Column(UUID(as_uuid=True), ForeignKey('SamplingData.id'))
+    sequencing_data_id = Column(UUID(as_uuid=True), ForeignKey('SequencingData.id'))
+  
     latitude = Column(Float)
     longitude = Column(Float)
     sample_info = Column(Text)
@@ -35,25 +37,20 @@ class Sample(Base):
     updated_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
     deleted_at = Column(DateTime, nullable=True)
 
-    # Setup relationships with cascade delete
-    chemical_data = relationship("ChemicalData", back_populates="sample", cascade="all, delete-orphan")
-    environmental_data = relationship("EnvironmentalData", back_populates="sample", cascade="all, delete-orphan")
-    sampling_data = relationship("SamplingData", back_populates="sample", cascade="all, delete-orphan")
-    sequencing_data = relationship("SequencingData", back_populates="sample", cascade="all, delete-orphan")
+    # One-to-one relationships
+    chemical_data = relationship("ChemicalData", back_populates="sample", foreign_keys=[chemical_data_id])
+    environmental_data = relationship("EnvData", back_populates="sample", foreign_keys=[env_data_id])
+    sampling_data = relationship("SamplingData", back_populates="sample", foreign_keys=[sampling_data_id])
+    sequencing_data = relationship("SequencingData", back_populates="sample", foreign_keys=[sequencing_data_id])
 
+    # One-to-many relationships
+    
     def __repr__(self):
-        return f"<Sample(id='{self.id}', original_id='{self.original_id}', add_date='{self.created_at}', " \
-               f"paper_id='{self.paper_id}', chemical_data_id='{self.chemical_data_id}', " \
-               f"env_data_id='{self.env_data_id}', sampling_data_id='{self.sampling_data_id}', " \
-               f"sequencing_data_id='{self.sequencing_data_id}', latitude={self.latitude}, " \
-               f"longitude={self.longitude}, sample_info='{self.sample_info}')>"
+        return f"<Sample(id='{self.id}', original_id='{self.original_id}', add_date='{self.created_at}', paper_id='{self.paper_id}', chemical_data_id='{self.chemical_data_id}', env_data_id='{self.env_data_id}', sampling_data_id='{self.sampling_data_id}', sequencing_data_id='{self.sequencing_data_id}', latitude={self.latitude}, longitude={self.longitude}, sample_info='{self.sample_info}')>"
 
     def __str__(self):
-        return f"Sample ID: {self.id}, Original ID: {self.original_id}, Added on: {self.created_at}, " \
-               f"Paper ID: {self.paper_id}, Chemical Data ID: {self.chemical_data_id}, " \
-               f"Environmental Data ID: {self.env_data_id}, Sampling Data ID: {self.sampling_data_id}, " \
-               f"Sequencing Data ID: {self.sequencing_data_id}, Latitude: {self.latitude}, " \
-               f"Longitude: {self.longitude}, Sample Info: {self.sample_info}"
+        return f"Sample ID: {self.id}, Original ID: {self.original_id}, Added on: {self.created_at}, Paper ID: {self.paper_id}, Chemical Data ID: {self.chemical_data_id}, Environmental Data ID: {self.env_data_id}, Sampling Data ID: {self.sampling_data_id}, Sequencing Data ID: {self.sequencing_data_id}, Latitude: {self.latitude}, Longitude: {self.longitude}, Sample Info: {self.sample_info}"
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -72,12 +69,13 @@ class Sample(Base):
     def to_json(self):
         return json.dumps(self.to_dict())
 
+    @staticmethod
     def is_valid_coordinates(latitude, longitude) -> bool:
         """ Validates whether the coordinates are in the correct range. """
         if latitude < -90 or latitude > 90:
             logging.error(f"The latitude '{latitude}' is outside the valid range of -90 to 90.")
             return False
-        if logging.error -180 or longitude > 180:
+        if longitude < -180 or longitude > 180:
             logging.error(f"The longitude '{longitude}' is outside the valid range of -180 to 180.")
             return False
         return True
@@ -89,6 +87,7 @@ class Sample(Base):
             logging.error(f"The add_date '{add_date}' is in the future.")
             return False
         return True
+
     
     
 
@@ -182,6 +181,10 @@ class ChemicalData(Base):
     __tablename__ = 'ChemicalData'
     id = Column(UUID(as_uuid=True), primary_key=True)
     sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
+
+    # One-to-one relationship with Sample
+    sample = relationship("Sample", back_populates="chemical_data")
+
     total_c_content = Column(Float)
     total_n_content = Column(Float)
     organic_matter_content = Column(Float)
@@ -191,16 +194,11 @@ class ChemicalData(Base):
     total_p = Column(Float)
     total_k = Column(Float)
 
-    sample = relationship("Sample", back_populates="chemical_data")
-
     def __repr__(self):
         return f"<ChemicalData(id='{self.id}')>"
 
     def __str__(self):
-        return (f"Chemical Data ID: {self.id}, C Content: {self.total_c_content}, "
-                f"N Content: {self.total_n_content}, Organic Matter: {self.organic_matter_content}, "
-                f"pH: {self.ph}, pH Method: {self.ph_method}, Ca: {self.total_ca}, "
-                f"P: {self.total_p}, K: {self.total_k}")
+        return f"Chemical Data ID: {self.id}, C Content: {self.total_c_content}, N Content: {self.total_n_content}, Organic Matter: {self.organic_matter_content}, pH: {self.ph}, pH Method: {self.ph_method}, Ca: {self.total_ca}, P: {self.total_p}, K: {self.total_k}"
 
     def to_dict(self):
         return {
@@ -250,6 +248,11 @@ class ChemicalData(Base):
 class EnvData(Base):
     __tablename__ = 'EnvData'
     id = Column(UUID(as_uuid=True), primary_key=True)
+    sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
+
+    # One-to-one relationship with Sample
+    sample = relationship("Sample", back_populates="environmental_data", foreign_keys=[sample_id], single_parent=True)
+
     biome = Column(String(32))
     biome_detail = Column(Text)
     plants_dominant = Column(Text)
@@ -259,9 +262,7 @@ class EnvData(Base):
         return f"<EnvData(id='{self.id}', biome='{self.biome}')>"
 
     def __str__(self):
-        return (f"Env Data ID: {self.id}, Biome: {self.biome}, "
-                f"Biome Detail: {self.biome_detail}, Dominant Plants: {self.plants_dominant}, "
-                f"All Plants: {self.plants_all}")
+        return f"Env Data ID: {self.id}, Biome: {self.biome}, Biome Detail: {self.biome_detail}, Dominant Plants: {self.plants_dominant}, All Plants: {self.plants_all}"
 
     def to_dict(self):
         return {
@@ -300,10 +301,9 @@ class SamplingData(Base):
     __tablename__ = 'SamplingData'
     id = Column(UUID(as_uuid=True), primary_key=True)
     sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
-    sample = relationship("Sample", back_populates="chemical_data")
     sample_name = Column(String(36))
     sample_type = Column(String(32))
-    manipulated = Column(Boolean) # tinyint(1) in MariaDB can be represented as a Boolean in Python
+    manipulated = Column(Boolean)
     sample_type_detailed = Column(Text)
     date_of_sampling = Column(Date)
     area_sampled = Column(Float)
@@ -317,6 +317,10 @@ class SamplingData(Base):
     external_map = Column(Float)
     sample_seqid = Column(String(120))
     sample_barcode = Column(Text)
+
+    # One-to-one relationship with Sample
+    sample = relationship("Sample", back_populates="sampling_data", foreign_keys=[sample_id], single_parent=True)
+
 
     def __repr__(self):
         return "<SamplingData(id='{}', sample_name='{}')>".format(self.id, self.sample_name)
@@ -361,10 +365,8 @@ class SamplingData(Base):
 
 class SequencingData(Base):
     __tablename__ = 'SequencingData'
-    
     id = Column(UUID(as_uuid=True), primary_key=True)
     sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
-    sample = relationship("Sample", back_populates="chemical_data")
     sequencing_platform = Column(String(32))
     target_gene = Column(String(32))
     primers = Column(Text)
@@ -372,6 +374,10 @@ class SequencingData(Base):
     extraction_dna_mass = Column(Float)
     extraction_dna_size = Column(Text)
     extraction_dna_method = Column(Text)
+
+    # One-to-one relationship with Sample
+    sample = relationship("Sample", back_populates="sequencing_data", foreign_keys=[sample_id], single_parent=True)
+
 
     def __repr__(self):
         return "<SequencingData(id='{0}', sequencing_platform='{1}', target_gene='{2}')>".format(
@@ -595,8 +601,6 @@ class Variant(Base):
     __tablename__ = 'variants_migrated' #TODO: change to table name to "variants" when switching to production
     id = Column(UUID(as_uuid=True), primary_key=True)
     sequence = Column(Text, nullable=False)
-    sample_id = Column(UUID(as_uuid=True), ForeignKey('Samples_migrated.id'))
-    sample = relationship("Sample", back_populates="chemical_data")
     abundance = Column(Integer, nullable=False)
     marker = Column(String(255), nullable=False)
     sh = Column(String(255), nullable=False)

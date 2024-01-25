@@ -43,7 +43,11 @@ class SampleService:
             return {"status": "error", "message": "Failed to create sample."}
         finally:
             self.session_manager.close_session()
-    
+
+    def GetSampleByPaper(self, paper_id):
+        #TODO: Implement    
+        return 
+
     def GetSampleById(self, sample_id):
         session = self.session_manager.get_session()
         try:
@@ -141,6 +145,7 @@ class SampleService:
             prev_vertex = current_vertex
 
         return is_inside
+    
 
     def GetSampleByAddDate(self, add_date_str):
         session = self.session_manager.get_session()

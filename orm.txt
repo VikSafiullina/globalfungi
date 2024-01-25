@@ -1,0 +1,184 @@
+Table of content
+Creating a Related Table in SQLAlchemy ORM
+Working with Related Objects in SQLAlchemy ORM 3.1. Creating a
+Using subquery() for Subqueries
+Simplifying SQLAlchemy ORM Operators for Querying 5.1. eq() — Equals
+Creating a Related Table in SQLAlchemy ORM
+In SQLAlchemy ORM, you can create related tables to represent one-to-many relationships between entities in your database. Let’s create an invoices table that is related to the existing customers table as an example of a one-to-many relationship.
+
+Defining the invoices Table and Mapped Class:
+Here’s how you can define the invoices table and its mapped class in SQLAlchemy:
+from sqlalchemy import create_engine, ForeignKey, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+engine = create_engine('sqlite:///sales.db', echo=True)
+Base = declarative_base()
+
+class Customer(Base):
+   __tablename__ = 'customers'
+
+   id = Column(Integer, primary_key=True)
+   name = Column(String)
+   address = Column(String)
+   email = Column(String)
+
+class Invoice(Base):
+   __tablename__ = 'invoices'
+   
+   id = Column(Integer, primary_key=True)
+   custid = Column(Integer, ForeignKey('customers.id'))
+   invno = Column(Integer)
+   amount = Column(Integer)
+   customer = relationship("Customer", back_populates="invoices")
+
+Customer.invoices = relationship("Invoice", order_by=Invoice.id, back_populates="customer")
+Base.metadata.create_all(engine)
+SQL Generated for Creating invoices Table:
+CREATE TABLE invoices (
+   id INTEGER NOT NULL,
+   custid INTEGER,
+   invno INTEGER,
+   amount INTEGER,
+   PRIMARY KEY (id),
+   FOREIGN KEY(custid) REFERENCES customers (id)
+In the code above, we define the Invoice class with a foreign key (custid) that references the id column in the customers table. We also establish a relationship between the Customer and Invoice classes using the relationship() function. This relationship represents the one-to-many relationship, where each customer can have multiple invoices.
+
+Relationship Patterns in SQLAlchemy ORM:
+One-to-Many: In a one-to-many relationship, a parent entity (e.g., Customer) is related to multiple child entities (e.g., Invoice). The relationship() function is specified on the parent to reference a collection of child entities. The relationship.back_populates parameter is used to establish bidirectional relationships.
+Many-to-One: In a many-to-one relationship, a parent entity references a single-child entity. The relationship() function is declared on the parent, creating a scalar-holding attribute.
+One-to-One: A one-to-one relationship is bidirectional and indicates a unique relationship. It can be converted from one to many by setting the uselist parameter to False.
+Many-to-Many: In a many-to-many relationship, an association table is created to link two classes with foreign keys. The secondary argument in the relationship() function specifies the association table. Bidirectional relationships are established using the relationship.back_populates parameter.
+Working with Related Objects in SQLAlchemy ORM
+In SQLAlchemy ORM, you can work with related objects to establish connections between tables in your database. Let’s explore how to create and work with related objects using examples.
+
+Creating a Customer Object with Invoices:
+When you create a Customer object, you can associate it with a collection of invoices. Here's how you can do it:
+
+# Create a Customer object with associated invoices
+c1 = Customer(name="Gopal Krishna", address="Bank Street Hyderabad", email="gk@gmail.com")
+c1.invoices = [Invoice(invno=10, amount=15000), Invoice(invno=14, amount=3850)]
+# Commit the object to the database
+from sqlalchemy.orm import sessionmaker
+Session = sessionmaker(bind=engine)
+session = Session()
+session.add(c1)
+session.commit()
+This code creates a Customer object c1 and associates it with two invoices. When you commit the session, SQLAlchemy automatically generates the necessary SQL INSERT queries for both the customers and invoices tables.
+
+Creating Customer Objects with Invoices:
+You can also create Customer objects along with their associated invoices in bulk. Here are a couple of ways to do it:
+
+Create a list of Customer objects with associated invoices:
+c2 = [
+   Customer(
+      name="Govind Pant", 
+      address="Gulmandi Aurangabad",
+      email="gpant@gmail.com",
+      invoices=[Invoice(invno=3, amount=10000), Invoice(invno=4, amount=5000)]
+   )
+]
+# Commit the list of objects
+session.add_all(c2)
+session.commit()
+Create a list of objects and use add_all() function of the session:
+rows = [
+   Customer(
+      name="Govind Kala", 
+      address="Gulmandi Aurangabad", 
+      email="kala@gmail.com", 
+      invoices=[Invoice(invno=7, amount=12000), Invoice(invno=8, amount=18500)]),
+   Customer(
+      name="Abdul Rahman", 
+      address="Rohtak", 
+      email="abdulr@gmail.com",
+      invoices=[Invoice(invno=9, amount=15000), Invoice(invno=11, amount=6000)]
+   )
+]
+# Add and commit the list of objects
+session.add_all(rows)
+session.commit()
+These examples demonstrate how to create Customer objects along with their associated invoices in various ways, making it flexible to work with related objects in SQLAlchemy ORM.
+
+Querying Data from Multiple Tables in SQLAlchemy ORM
+In SQLAlchemy ORM, you can easily query data from multiple tables by creating joins between them. Let’s explore how to perform queries on both the Customer and Invoice tables at the same time.
+
+Implicit Join Using filter()
+
+You can construct a simple implicit join between the Customer and Invoice tables using the Query.filter() method to equate their related columns. Here's how you can load both Customer and Invoice entities at once:
+
+from sqlalchemy.orm import sessionmaker
+Session = sessionmaker(bind=engine)
+session = Session()
+for c, i in session.query(Customer, Invoice).filter(Customer.id == Invoice.custid).all():
+    print("ID: {} Name: {} Invoice No: {} Amount: {}".format(c.id, c.name, i.invno, i.amount))
+This code generates an SQL query with a WHERE clause that equates the id column of the Customer table with the custid column of the Invoice table.
+
+Explicit Join Using Query.join()
+
+You can also perform an explicit join using the Query.join() method:
+result = session.query(Customer).join(Invoice).filter(Invoice.amount == 8500).all()
+This code generates an SQL JOIN syntax using JOIN between the Customer and Invoice tables based on the foreign key relationship. It fetches customers whose invoices have an amount of 8500.
+
+Iterating Through Joined Results
+Once you have the joined results, you can iterate through them using a loop:
+
+result = session.query(Customer).join(Invoice).filter(Invoice.amount == 8500)
+for row in result:
+    for inv in row.invoices:
+        print(row.id, row.name, inv.invno, inv.amount)
+This code iterates through the customers and their associated invoices with an amount of 8500, providing detailed information.
+
+Using outerjoin() for Left Outer Join
+You can also use the outerjoin() function to perform a left outer join:
+
+query.outerjoin(Customer.invoices)
+This code generates a left outer join between the Customer and Invoice tables, including all customers even if they don't have associated invoices.
+
+Using subquery() for Subqueries
+The subquery() method allows you to create subqueries within your queries. Here's an example of how to use it:
+
+from sqlalchemy.sql import func
+stmt = session.query(
+    Invoice.custid, func.count('*').label('invoice_count')
+).group_by(Invoice.custid).subquery()
+for u, count in session.query(Customer, stmt.c.invoice_count).outerjoin(stmt, Customer.id == stmt.c.custid).order_by(Customer.id):
+    print(u.name, count)
+In this code, a subquery is used to count the number of invoices per customer, and the results are joined with the Customer table to display the name and invoice count.
+
+These examples demonstrate various ways to query data from multiple tables and perform joins in SQLAlchemy ORM.
+
+Simplifying SQLAlchemy ORM Operators for Querying
+In SQLAlchemy ORM, you can use various operators to query your database efficiently. Let’s break down some of these operators and understand how they work.
+
+1. __eq__() - Equals Operator
+This operator allows you to perform a “equals” comparison between columns. Here’s how to use it:
+
+s = session.query(Customer).filter(Invoice.invno.__eq__(12))
+Explanation: This code filters the Customer table to find records where the invno column in the Invoice table is equal to 12.
+
+2. __ne__() - Not Equals Operator
+The “not equals” operator lets you find records that don’t match a specified value:
+
+s = session.query(Customer).filter(Invoice.custid.__ne__(2))
+Explanation: This code filters the Customer table to find records where the custid column in the Invoice table is not equal to 2.
+
+3. contains() - Contains Operator
+For one-to-many collections, you can use the contains() operator to check if a collection contains specific values:
+
+s = session.query(Invoice).filter(Invoice.invno.contains([3, 4, 5]))
+Explanation: This code filters the Invoice table to find records where the invno column contains any of the values [3, 4, 5].
+
+4. any() - Any Operator
+The any() operator is used for collections and allows you to find records that match any condition within a collection:
+
+s = session.query(Customer).filter(Customer.invoices.any(Invoice.invno == 11))
+Explanation: This code filters the Customer table to find records where there's at least one associated invoice with an invno equal to 11.
+
+5. has() - Has Operator
+When dealing with scalar references, you can use the has() operator to check if a relationship exists:
+
+s = session.query(Invoice).filter(Invoice.customer.has(name='Arjun Pandit'))
+Explanation: This code filters the Invoice table to find records where there's a related customer with the name 'Arjun Pandit'.
+
+Please don’t hesitate to share your thoughts, whether they are constructive criticism, positive feedback or clapping. Your input is valuable and greatly appreciated.
