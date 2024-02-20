@@ -8,7 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import ForeignKey
 from sqlalchemy import Column, Integer, String, Date, Boolean, Float, Text, DateTime, func
 import logging
-from sqlalchemy import create_engine, MetaData
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func

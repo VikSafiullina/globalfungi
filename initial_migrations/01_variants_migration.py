@@ -165,4 +165,4 @@ def migrate_variants_table(db_config, original_table_name, result_table_name):
 
 # Example db_config
 db_config = {'host': 'localhost', 'user': 'root', 'password': '220199', 'database': 'globalfungitest'}
-migrate_variants_table(db_config, 'variants', 'variants_migrated_2000')
+migrate_variants_table(db_config, 'variants', 'variants_migrated_2000_v2')

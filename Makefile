@@ -17,6 +17,16 @@ db-reset:
 config:
 	cp common/config.example.py common/config.py
 
-update-requirements:
-	pip-compile --upgrade --output-file requirements.txt requirements.in
-	pip3 install -r requirements.txt
+
+prepare-env:
+	@echo "Preparing environment..."
+	@python3 -m venv venv
+	@echo "Activating virtual environment and installing dependencies..."
+	@pip install --upgrade pip
+	@. venv/bin/activate && pip install --upgrade pip && pip install pip-tools && pip-compile requirements.in && pip install -r requirements.txt && pip install --upgrade graphene-sqlalchemy==3.0.0rc1 graphene==v3.3.0 && pip install "strawberry-graphql[debug-server]"
+	@echo "Done!"
+
+update-dependencies:
+	@echo "Updating dependencies..."
+	@python3 -m pip install --upgrade pip && pip-compile requirements.in && pip install -r requirements.txt
+	@echo "Done!"

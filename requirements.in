@@ -1,6 +1,12 @@
-flask
+fastapi
+sqlalchemy
+sqlalchemy-utils
+opens
 pydantic
 validate_email
 sqlalchemy
+sqlalchemy_utils
+sqlalchemy_schemadisplay
 pymysql
 mysql-connector-python
+osmnx
