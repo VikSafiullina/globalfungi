@@ -1,26 +1,32 @@
-# Use the official MariaDB image as a parent image
-FROM mariadb:latest
+FROM python:3.11.8-slim
+WORKDIR /python-docker
 
-# Install Python3 and Pip
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install necessary system dependencies including curl
+RUN apt-get update && apt-get install -y \
+    gnupg \
+    gcc \
+    g++ \
+    unixodbc-dev \
+    curl \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
-WORKDIR /usr/src/app
+RUN sh -c "curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -" \
+    && apt-get update \
+    && sh -c "curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list" \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    && ACCEPT_EULA=Y apt-get install -y mssql-tools18
 
-# Copy the scripts directory contents into the container at /usr/src/app
-COPY initial_migrations/ /usr/src/app/
-
-# Copy the custom entrypoint script into the container and make it executable
-COPY migrations_entrypoint.sh /usr/local/bin/
-RUN apt-get update && \
-    apt-get install -y mariadb-client && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* \
-    chmod +x /usr/local/bin/migrations_entrypoint.sh
-
-# Run your custom entrypoint script
-ENTRYPOINT ["migrations_entrypoint.sh"]
-CMD ["mysqld"]
+COPY requirements.in requirements.in
+RUN pip install pip-tools
+RUN pip-compile requirements.in > requirements.txt
+RUN sed -i '/pyobjc/d' requirements.txt
+RUN pip install -r requirements.txt
+RUN pip install 'strawberry-graphql[debug-server]'
+COPY . .
+RUN chmod 777 /python-docker/_run.sh
+EXPOSE 80
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
