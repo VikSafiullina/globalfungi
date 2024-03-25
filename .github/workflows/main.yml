@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag viktoriiasafiullina905/globalfungi_backend:latest
+        run: docker build . --file Dockerfile --tag viktoriiasafiullina905/globalfungi_backend_test:latest
       - name: Push Docker image
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
@@ -29,7 +29,7 @@ jobs:
           port: ${{ secrets.ON_PREM_SERVER_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker pull viktoriiasafiullina905/globalfungi_backend:latest
+            docker pull viktoriiasafiullina905/globalfungi_backend_test:latest
             docker stop fastapi-app || true
             docker rm fastapi-app || true
-            docker run -d --name fastapi-app -p 80:80 viktoriiasafiullina905/globalfungi_backend:latest
+            docker run -d --name fastapi-app -p 80:80 viktoriiasafiullina905/globalfungi_backend_test:latest
